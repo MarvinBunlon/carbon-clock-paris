@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Carbon Clock — Paris</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Visualisation 24h du trafic, des émissions et de la qualité de l'air à Paris.">
+<meta name="theme-color" content="#0A0E14">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700&family=DM+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/deck.gl@9.0.16/dist.min.js"></script>
+
+<style>
+:root {
+  --bg: #0A0E14;
+  --panel: rgba(10, 14, 20, 0.82);
+  --seine: #4DB8E8;
+  --copper: #D4845A;
+  --alert: #E85D4C;
+  --ink: #F4F1EC;
+  --muted: rgba(244, 241, 236, 0.45);
+  --border: rgba(244, 241, 236, 0.12);
+  --font-display: "Syne", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  min-height: 100vh; min-height: 100dvh;
+  overflow: hidden; background: var(--bg);
+  font-family: var(--font-body); color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  user-select: none;
+}
+#map-container { position: absolute; inset: 0; background: var(--bg); }
+.maplibregl-ctrl-attrib, .maplibregl-ctrl-logo,
+.mapboxgl-ctrl-attrib, .mapboxgl-ctrl-logo {
+  opacity: 0.3; filter: grayscale(1) brightness(0.7);
+}
+
+#loader {
+  position: fixed; inset: 0; z-index: 100;
+  background: radial-gradient(ellipse at 30% 20%, #142033, var(--bg) 60%);
+  display: grid; place-content: center; text-align: center; gap: 0.6rem;
+  transition: opacity 0.5s ease;
+}
+#loader.hidden { opacity: 0; pointer-events: none; }
+#loader-title {
+  font-family: var(--font-display); font-size: 2rem; letter-spacing: 0.02em;
+}
+#loader-tagline {
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.72rem;
+}
+#loader-progress {
+  width: min(320px, 70vw); height: 3px; margin: 1rem auto 0;
+  background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;
+}
+#loader-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--seine), var(--copper));
+  transition: width 0.25s ease;
+}
+#loader-status { color: var(--muted); font-size: 0.85rem; margin-top: 0.6rem; }
+#loader-hint { color: rgba(244,241,236,0.3); font-size: 0.75rem; max-width: 36ch; margin: 0.4rem auto 0; line-height: 1.45; }
+
+#title {
+  position: fixed; top: 22px; left: 28px; z-index: 10; pointer-events: none;
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 600;
+  text-shadow: 0 0 18px rgba(0,0,0,0.85);
+}
+#title .sep { opacity: 0.35; margin: 0 0.45rem; }
+#title .subtitle {
+  display: block; margin-top: 4px;
+  font-family: var(--font-body); font-weight: 300; font-size: 0.7rem;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+}
+#title .provenance {
+  display: block; margin-top: 6px;
+  font-family: var(--font-mono); font-size: 0.62rem; color: rgba(244,241,236,0.35);
+}
+
+#time-display {
+  position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+  z-index: 10; pointer-events: none;
+  font-family: var(--font-mono); font-size: clamp(2.4rem, 6vw, 3.4rem); font-weight: 500;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 28px rgba(77,184,232,0.28);
+}
+#time-display .ampm {
+  font-size: 0.9rem; opacity: 0.45; margin-left: 0.5rem; vertical-align: 0.55rem;
+}
+
+#legend {
+  position: fixed; top: 24px; right: 28px; z-index: 10;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+#legend .legend-bar {
+  width: 170px; height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--seine), var(--copper), var(--alert));
+}
+#legend .legend-labels {
+  width: 170px; display: flex; justify-content: space-between; font-size: 0.58rem;
+}
+
+#caption {
+  position: fixed; top: 92px; left: 50%; transform: translateX(-50%);
+  z-index: 10; pointer-events: none; text-align: center;
+  max-width: min(520px, 88vw);
+  font-size: 0.82rem; color: var(--muted); line-height: 1.4;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+}
+
+#stats {
+  position: fixed; top: 110px; right: 28px; z-index: 10;
+  background: var(--panel); backdrop-filter: blur(12px);
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 0.85rem 1rem; min-width: 190px;
+  font-family: var(--font-mono); font-size: 0.68rem;
+}
+#stats .stat-row {
+  display: flex; align-items: center; gap: 0.45rem; margin: 0.35rem 0;
+}
+#stats .stat-label { color: var(--muted); flex: 1; }
+#stats .stat-value { color: var(--ink); font-weight: 500; min-width: 42px; text-align: right; }
+#stats .stat-unit { color: var(--muted); font-size: 0.58rem; }
+#stats .bar {
+  width: 46px; height: 3px; background: rgba(244,241,236,0.08); border-radius: 1px; overflow: hidden;
+}
+#stats .bar-fill {
+  display: block; height: 100%; width: 100%;
+  background: linear-gradient(90deg, var(--seine), var(--copper), var(--alert));
+  transform-origin: left; transform: scaleX(0); transition: transform 0.3s ease;
+}
+
+#corr-chip {
+  position: fixed; left: 28px; bottom: 92px; z-index: 10;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+  padding: 0.45rem 0.85rem; font-family: var(--font-mono); font-size: 0.68rem;
+  color: var(--muted); backdrop-filter: blur(10px);
+}
+#corr-chip strong { color: var(--seine); font-weight: 500; }
+
+#attribution {
+  position: fixed; left: 28px; bottom: 84px; z-index: 9;
+  font-size: 0.58rem; color: rgba(244,241,236,0.28); line-height: 1.45;
+}
+#attribution a { color: rgba(77,184,232,0.65); text-decoration: none; }
+
+#status-line {
+  position: fixed; right: 28px; bottom: 84px; z-index: 9;
+  font-size: 0.62rem; color: rgba(244,241,236,0.28);
+}
+#status-line .key {
+  font-family: var(--font-mono); border: 1px solid rgba(244,241,236,0.15);
+  border-radius: 4px; padding: 0 4px; margin: 0 2px;
+}
+
+#controls {
+  position: fixed; left: 0; right: 0; bottom: 0; height: 72px; z-index: 10;
+  display: flex; align-items: center; gap: 1rem; padding: 0 1.5rem;
+  background: var(--panel); backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+}
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: transparent; border: 1px solid var(--border); color: var(--ink);
+  cursor: pointer; display: grid; place-items: center; flex-shrink: 0;
+}
+.icon-btn:hover { border-color: var(--seine); color: var(--seine); }
+.icon-btn svg { width: 14px; height: 14px; fill: currentColor; }
+#time-slider-wrap { flex: 1; position: relative; min-width: 120px; }
+#time-slider {
+  width: 100%; appearance: none; height: 3px; border-radius: 2px;
+  background: rgba(244,241,236,0.12); outline: none;
+}
+#time-slider::-webkit-slider-thumb {
+  appearance: none; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--seine); cursor: pointer; box-shadow: 0 0 10px rgba(77,184,232,0.45);
+}
+#tick-marks {
+  display: flex; justify-content: space-between; margin-top: 6px; pointer-events: none;
+}
+#tick-marks .tick { width: 1px; height: 4px; background: rgba(244,241,236,0.18); }
+#tick-marks .tick.major { height: 7px; background: rgba(244,241,236,0.35); }
+#speed-controls, #layer-toggles { display: flex; gap: 0.35rem; flex-shrink: 0; }
+.speed-btn, .pill {
+  border: 1px solid var(--border); background: transparent; color: var(--muted);
+  border-radius: 999px; padding: 0.35rem 0.65rem; font-size: 0.68rem; cursor: pointer;
+  font-family: var(--font-body);
+}
+.speed-btn.active, .pill.active { color: var(--ink); border-color: var(--seine); background: rgba(77,184,232,0.12); }
+.pill .dot {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--seine); margin-right: 5px; vertical-align: 1px;
+}
+.pill[data-layer="emissions"] .dot { background: var(--copper); }
+.pill[data-layer="airquality"] .dot { background: var(--alert); }
+
+.modal {
+  position: fixed; inset: 0; z-index: 50; display: none; place-items: center;
+  padding: 1.5rem;
+}
+.modal.show { display: grid; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.55); }
+.modal-card {
+  position: relative; width: min(560px, 100%);
+  background: #121820; border: 1px solid var(--border); border-radius: 16px;
+  padding: 1.5rem; max-height: 80vh; overflow: auto;
+}
+.modal-card h2 { font-family: var(--font-display); margin: 0 0 0.6rem; font-size: 1.25rem; }
+.modal-lede { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+.modal-close {
+  position: absolute; top: 0.8rem; right: 0.9rem;
+  background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer;
+}
+.modal-meta { margin-top: 1rem; font-size: 0.72rem; color: rgba(244,241,236,0.35); }
+.modal-meta a { color: var(--seine); }
+.source-row {
+  margin: 0.85rem 0; padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border); border-radius: 10px;
+}
+.source-row strong { display: block; margin-bottom: 0.2rem; }
+.source-row span { color: var(--muted); font-size: 0.8rem; }
+
+@media (max-width: 820px) {
+  #stats, #status-line, #corr-chip { display: none; }
+  #caption { top: 78px; font-size: 0.72rem; }
+  #controls { gap: 0.55rem; padding: 0 0.8rem; }
+  #layer-toggles .pill span:not(.dot) { font-size: 0; }
+  #layer-toggles .pill { padding: 0.4rem 0.55rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div id="loader-title">Carbon Clock</div>
+  <div id="loader-tagline">Paris · 24 heures</div>
+  <div id="loader-progress"><div id="loader-bar"></div></div>
+  <div id="loader-status">Initialisation…</div>
+  <div id="loader-hint">Trafic Ville de Paris · émissions proxy · qualité de l’air Open-Meteo / CAMS</div>
+</div>
+
+<div id="map-container"></div>
+
+<div id="title">
+  <span>Carbon Clock</span><span class="sep">·</span><span>Paris</span>
+  <span class="subtitle">Trafic, émissions, qualité de l’air</span>
+  <span class="provenance" id="title-provenance">Open Data Paris · Open-Meteo CAMS</span>
+</div>
+
+<div id="time-display">
+  <span id="time-text">08:00</span><span class="ampm" id="time-ampm"></span>
+</div>
+
+<div id="caption"></div>
+
+<div id="stats">
+  <div class="stat-row">
+    <span class="stat-label">Flux actifs</span>
+    <span class="stat-value" id="stat-trips">0</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">Émissions</span>
+    <span class="stat-value" id="stat-emissions">0</span>
+    <span class="stat-unit">% pic</span>
+    <span class="bar"><span class="bar-fill" id="stat-emissions-bar"></span></span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">NO₂ moyen</span>
+    <span class="stat-value" id="stat-no2">0</span>
+    <span class="stat-unit">µg/m³</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">PM2.5</span>
+    <span class="stat-value" id="stat-pm25">0</span>
+    <span class="stat-unit">µg/m³</span>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="legend-bar"></div>
+  <div class="legend-labels"><span>Calme</span><span>Modéré</span><span>Intense</span></div>
+</div>
+
+<div id="corr-chip">Trafic ↔ NO₂ · <strong id="corr-value">r=—</strong></div>
+
+<div id="attribution">
+  Données : Open Data Paris · Open-Meteo / CAMS<br>
+  Fond : <a href="https://carto.com/about-carto/" target="_blank" rel="noopener">© CARTO</a> ·
+  <a href="https://www.openstreetmap.org/about/" target="_blank" rel="noopener">© OpenStreetMap</a>
+</div>
+
+<div id="status-line">
+  <span class="key">espace</span> lecture ·
+  <span class="key">←/→</span> défiler ·
+  <span class="key">R</span> minuit
+</div>
+
+<div id="controls">
+  <button id="play-btn" class="icon-btn" aria-label="Lecture / pause">
+    <svg id="play-icon" viewBox="0 0 16 16"><path d="M3 2 L13 8 L3 14 Z"/></svg>
+    <svg id="pause-icon" viewBox="0 0 16 16" style="display:none"><path d="M3 2 H6 V14 H3 Z M10 2 H13 V14 H10 Z"/></svg>
+  </button>
+  <button id="reset-btn" class="icon-btn" aria-label="Revenir à minuit">
+    <svg viewBox="0 0 16 16"><path d="M8 3 V1 L4 4 L8 7 V5 A3 3 0 1 1 5 8 H3 A5 5 0 1 0 8 3 Z"/></svg>
+  </button>
+  <div id="time-slider-wrap">
+    <input type="range" id="time-slider" min="0" max="86399" value="28800" step="1">
+    <div id="tick-marks">
+      <div class="tick major"></div>
+      <div class="tick"></div><div class="tick"></div><div class="tick"></div>
+      <div class="tick major"></div>
+      <div class="tick"></div><div class="tick"></div><div class="tick"></div>
+      <div class="tick major"></div>
+      <div class="tick"></div><div class="tick"></div><div class="tick"></div>
+      <div class="tick major"></div>
+    </div>
+  </div>
+  <div id="speed-controls">
+    <button class="speed-btn active" data-speed="1">1×</button>
+    <button class="speed-btn" data-speed="2">2×</button>
+    <button class="speed-btn" data-speed="5">5×</button>
+    <button class="speed-btn" data-speed="10">10×</button>
+  </div>
+  <div id="layer-toggles">
+    <span class="pill active" data-layer="trips"><span class="dot"></span>Flux</span>
+    <span class="pill active" data-layer="emissions"><span class="dot"></span>Émissions</span>
+    <span class="pill active" data-layer="airquality"><span class="dot"></span>Air</span>
+    <span class="pill active" data-layer="arcs"><span class="dot"></span>Axes</span>
+  </div>
+  <button id="about-btn" class="icon-btn" aria-label="À propos des données" title="À propos">
+    <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm0 1.2A5.3 5.3 0 1 1 8 13.3 5.3 5.3 0 0 1 8 2.7Zm-.05 2.4a.85.85 0 1 0 0 1.7.85.85 0 0 0 0-1.7Zm-.85 2.95V12h1.7V8.05h-1.7Z"/></svg>
+  </button>
+</div>
+
+<div id="about-modal" class="modal" role="dialog" aria-modal="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card">
+    <button class="modal-close" id="about-close" aria-label="Fermer">×</button>
+    <h2>À propos de ce POC</h2>
+    <p class="modal-lede">
+      Adaptation parisienne de Carbon Clock : croiser mobilité et pollution sur 24 h,
+      faire émerger une corrélation, et proposer une lecture citoyen / activist.
+    </p>
+    <div id="about-content"></div>
+    <p class="modal-meta">Fait avec l’aide de l’IA · Sources citées ci-dessus</p>
+  </div>
+</div>
+
+<script>
+const BASEMAP_STYLE_URL = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/json";
+const BASEMAP_FALLBACK = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+const PARIS_CENTER = [2.342, 48.8566];
+const SECONDS_IN_DAY = 86400;
+const TRAIL_LENGTH_SEC = 280;
+const TARGET_FPS = 30;
+const FRAME_INTERVAL_MS = 1000 / TARGET_FPS;
+
+const SEINE = [77, 184, 232];
+const COPPER = [212, 132, 90];
+const ALERT = [232, 93, 76];
+
+const CAPTIONS = [
+  { t: 3 * 3600, text: "3 h — Paris dort. Axes presque vides, NO₂ au plus bas." },
+  { t: 8 * 3600, text: "8 h — Heure de pointe. Les grands axes s’allument, le NO₂ monte." },
+  { t: 13 * 3600, text: "13 h — Flux soutenu. Émissions encore élevées sur le périphérique et les portes." },
+  { t: 18 * 3600, text: "18 h — Pic du soir. Trafic et pollution se renforcent ensemble." },
+  { t: 22 * 3600, text: "22 h — La ville ralentit. L’air redescend, plus lentement que le trafic." },
+];
+
+const state = {
+  currentTime: 8 * 3600,
+  playing: true,
+  speed: 1,
+  sliderActive: false,
+  trips: [],
+  emissions: [],
+  airquality: [],
+  arcs: null,
+  manifest: null,
+  layerVisibility: { trips: true, emissions: true, airquality: true, arcs: true },
+  lastFrame: 0,
+};
+
+let map, deckOverlay;
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function intensityToColor(t) {
+  t = Math.max(0, Math.min(1, t));
+  if (t <= 0.5) {
+    const k = t / 0.5;
+    return [
+      Math.round(lerp(SEINE[0], COPPER[0], k)),
+      Math.round(lerp(SEINE[1], COPPER[1], k)),
+      Math.round(lerp(SEINE[2], COPPER[2], k)),
+    ];
+  }
+  const k = (t - 0.5) / 0.5;
+  return [
+    Math.round(lerp(COPPER[0], ALERT[0], k)),
+    Math.round(lerp(COPPER[1], ALERT[1], k)),
+    Math.round(lerp(COPPER[2], ALERT[2], k)),
+  ];
+}
+function colorAlpha(rgb, a) { return [...rgb, a]; }
+
+const loader = {
+  init() {
+    this.el = document.getElementById("loader");
+    this.bar = document.getElementById("loader-bar");
+    this.status = document.getElementById("loader-status");
+  },
+  progress(pct, msg) {
+    if (this.bar) this.bar.style.width = pct + "%";
+    if (msg && this.status) this.status.textContent = msg;
+  },
+  hide() {
+    this.el.classList.add("hidden");
+    setTimeout(() => this.el.remove(), 600);
+  }
+};
+
+function formatTime(sec) {
+  const s = ((Math.floor(sec) % SECONDS_IN_DAY) + SECONDS_IN_DAY) % SECONDS_IN_DAY;
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function hourFraction(sec) {
+  const h = (sec / 3600) % 24;
+  const i0 = Math.floor(h) % 24;
+  const i1 = (i0 + 1) % 24;
+  const f = h - Math.floor(h);
+  return { i0, i1, f };
+}
+
+function sampleHourly(arr, sec) {
+  if (!arr || !arr.length) return 0;
+  const { i0, i1, f } = hourFraction(sec);
+  return lerp(arr[i0] ?? 0, arr[i1] ?? 0, f);
+}
+
+function updateCaption(sec) {
+  let text = CAPTIONS[0].text;
+  for (const c of CAPTIONS) if (sec >= c.t) text = c.text;
+  document.getElementById("caption").textContent = text;
+}
+
+function updateStats(sec) {
+  const { i0, i1, f } = hourFraction(sec);
+  let active = 0;
+  for (const trip of state.trips) {
+    const t0 = trip.timestamps[0];
+    const t1 = trip.timestamps[trip.timestamps.length - 1];
+    if (sec >= t0 && sec <= t1 + TRAIL_LENGTH_SEC) active++;
+  }
+
+  let emSum = 0;
+  for (const st of state.emissions) emSum += sampleHourly(st.hourly_intensity, sec);
+  const emAvg = state.emissions.length ? emSum / state.emissions.length : 0;
+
+  let no2 = 0, pm = 0;
+  for (const st of state.airquality) {
+    no2 += sampleHourly(st.hourly_no2, sec);
+    pm += sampleHourly(st.hourly_pm25, sec);
+  }
+  const n = state.airquality.length || 1;
+  no2 /= n; pm /= n;
+
+  document.getElementById("stat-trips").textContent = active.toLocaleString("fr-FR");
+  document.getElementById("stat-emissions").textContent = Math.round(emAvg * 100);
+  document.getElementById("stat-emissions-bar").style.transform = `scaleX(${emAvg})`;
+  document.getElementById("stat-no2").textContent = no2.toFixed(1);
+  document.getElementById("stat-pm25").textContent = pm.toFixed(1);
+  document.getElementById("time-text").textContent = formatTime(sec);
+  document.getElementById("time-ampm").textContent = "";
+  if (!state.sliderActive) document.getElementById("time-slider").value = String(Math.floor(sec));
+  updateCaption(sec);
+}
+
+function buildLayers() {
+  const t = state.currentTime;
+  const layers = [];
+
+  if (state.layerVisibility.arcs && state.arcs) {
+    layers.push(new deck.GeoJsonLayer({
+      id: "arcs",
+      data: state.arcs,
+      stroked: true,
+      filled: false,
+      getLineWidth: f => 1 + 5 * sampleHourly(f.properties.hourly_intensity, t),
+      lineWidthUnits: "pixels",
+      getLineColor: f => colorAlpha(intensityToColor(sampleHourly(f.properties.hourly_intensity, t)), 160),
+      updateTriggers: {
+        getLineWidth: t,
+        getLineColor: t,
+      },
+      pickable: false,
+    }));
+  }
+
+  if (state.layerVisibility.emissions && state.emissions.length) {
+    layers.push(new deck.HeatmapLayer({
+      id: "emissions",
+      data: state.emissions,
+      getPosition: d => [d.lng, d.lat],
+      getWeight: d => Math.max(0.05, sampleHourly(d.hourly_intensity, t)),
+      radiusPixels: 42,
+      intensity: 1.15,
+      threshold: 0.05,
+      colorRange: [
+        [77, 184, 232, 0],
+        [77, 184, 232, 120],
+        [212, 132, 90, 160],
+        [232, 93, 76, 200],
+      ],
+      updateTriggers: { getWeight: Math.floor(t / 60) },
+    }));
+  }
+
+  if (state.layerVisibility.trips && state.trips.length) {
+    layers.push(new deck.TripsLayer({
+      id: "trips",
+      data: state.trips,
+      getPath: d => d.path,
+      getTimestamps: d => d.timestamps,
+      getColor: [77, 184, 232],
+      opacity: 0.55,
+      widthMinPixels: 1.5,
+      trailLength: TRAIL_LENGTH_SEC,
+      currentTime: t,
+      shadowEnabled: false,
+    }));
+  }
+
+  if (state.layerVisibility.airquality && state.airquality.length) {
+    layers.push(new deck.ScatterplotLayer({
+      id: "air-halos",
+      data: state.airquality,
+      getPosition: d => [d.lng, d.lat],
+      getRadius: d => 180 + 520 * sampleHourly(d.hourly_intensity, t),
+      radiusUnits: "meters",
+      getFillColor: d => colorAlpha(intensityToColor(sampleHourly(d.hourly_intensity, t)), 55),
+      stroked: true,
+      getLineColor: d => colorAlpha(intensityToColor(sampleHourly(d.hourly_intensity, t)), 200),
+      lineWidthMinPixels: 1,
+      updateTriggers: {
+        getRadius: Math.floor(t / 60),
+        getFillColor: Math.floor(t / 60),
+        getLineColor: Math.floor(t / 60),
+      },
+    }));
+  }
+
+  return layers;
+}
+
+function render() {
+  if (deckOverlay) deckOverlay.setProps({ layers: buildLayers() });
+  updateStats(state.currentTime);
+}
+
+function animate(ts) {
+  requestAnimationFrame(animate);
+  if (ts - state.lastFrame < FRAME_INTERVAL_MS) return;
+  const dt = (ts - state.lastFrame) / 1000;
+  state.lastFrame = ts;
+  if (state.playing && !state.sliderActive) {
+    state.currentTime = (state.currentTime + state.speed * 60 * dt) % SECONDS_IN_DAY;
+  }
+  render();
+}
+
+async function initMap() {
+  let style = BASEMAP_FALLBACK;
+  try {
+    const probe = await fetch(BASEMAP_FALLBACK, { method: "HEAD" });
+    if (!probe.ok) style = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#0A0E14" } }] };
+  } catch {
+    style = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#0A0E14" } }] };
+  }
+
+  map = new maplibregl.Map({
+    container: "map-container",
+    style,
+    center: PARIS_CENTER,
+    zoom: 11.6,
+    pitch: 45,
+    bearing: -18,
+    attributionControl: false,
+  });
+
+  await map.once("load");
+  // Mute water/buildings slightly if style layers exist
+  try {
+    const layers = map.getStyle().layers || [];
+    for (const layer of layers) {
+      if (layer.type === "background") map.setPaintProperty(layer.id, "background-color", "#0A0E14");
+    }
+  } catch (_) {}
+
+  deckOverlay = new deck.MapboxOverlay({
+    interleaved: false,
+    layers: [],
+  });
+  map.addControl(deckOverlay);
+}
+
+async function loadData() {
+  loader.progress(10, "Manifest…");
+  const manifest = await fetch("data/manifest.json").then(r => r.json());
+  state.manifest = manifest;
+  document.getElementById("corr-value").textContent =
+    `r=${manifest.correlation_traffic_no2} (pointe matin)`;
+  document.getElementById("title-provenance").textContent =
+    `Journée trafic ${manifest.traffic_day} · ${manifest.arcs} arcs · ${manifest.air_stations} points air`;
+
+  loader.progress(25, "Émissions…");
+  state.emissions = await fetch("data/emissions.json").then(r => r.json());
+
+  loader.progress(40, "Qualité de l’air…");
+  state.airquality = await fetch("data/airquality.json").then(r => r.json());
+
+  loader.progress(55, "Axes routiers…");
+  state.arcs = await fetch("data/arcs.json").then(r => r.json());
+
+  loader.progress(70, "Flux de mobilité…");
+  state.trips = await fetch("data/trips.json").then(r => r.json());
+
+  loader.progress(90, "Carte…");
+  await initMap();
+  loader.progress(100, "Prêt");
+  bindUI();
+  fillAbout();
+  loader.hide();
+  state.lastFrame = performance.now();
+  requestAnimationFrame(animate);
+}
+
+function fillAbout() {
+  const m = state.manifest;
+  if (!m) return;
+  const notes = (m.notes || []).map(n => `<li>${n}</li>`).join("");
+  const sources = (m.sources || []).map(s => `
+    <div class="source-row">
+      <strong>${s.layer} — ${s.name}</strong>
+      <span>${s.publisher}${s.url ? ` · <a href="${s.url}" target="_blank" rel="noopener">source</a>` : ""}</span>
+    </div>`).join("");
+  document.getElementById("about-content").innerHTML = `
+    <p class="modal-lede">
+      Corrélation pointe matin (6–10 h) : <strong>r = ${m.correlation_traffic_no2_morning_rush ?? m.correlation_traffic_no2}</strong><br>
+      Corrélation 24 h : r = ${m.correlation_traffic_no2_all_day ?? "—"} ·
+      pointe soir : r = ${m.correlation_traffic_no2_evening_rush ?? "—"}
+    </p>
+    ${sources}
+    <ul style="color:var(--muted);font-size:0.82rem;line-height:1.45">${notes}</ul>
+  `;
+}
+
+function bindUI() {
+  const playBtn = document.getElementById("play-btn");
+  const playIcon = document.getElementById("play-icon");
+  const pauseIcon = document.getElementById("pause-icon");
+  const slider = document.getElementById("time-slider");
+
+  function syncPlayIcons() {
+    playIcon.style.display = state.playing ? "none" : "block";
+    pauseIcon.style.display = state.playing ? "block" : "none";
+  }
+  syncPlayIcons();
+
+  playBtn.addEventListener("click", () => {
+    state.playing = !state.playing;
+    syncPlayIcons();
+  });
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    state.currentTime = 0;
+  });
+  slider.addEventListener("pointerdown", () => { state.sliderActive = true; });
+  slider.addEventListener("pointerup", () => { state.sliderActive = false; });
+  slider.addEventListener("input", (e) => {
+    state.currentTime = Number(e.target.value);
+  });
+
+  document.querySelectorAll(".speed-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".speed-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.speed = Number(btn.dataset.speed);
+    });
+  });
+
+  document.querySelectorAll(".pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const layer = pill.dataset.layer;
+      state.layerVisibility[layer] = !state.layerVisibility[layer];
+      pill.classList.toggle("active", state.layerVisibility[layer]);
+    });
+  });
+
+  const modal = document.getElementById("about-modal");
+  document.getElementById("about-btn").addEventListener("click", () => modal.classList.add("show"));
+  document.getElementById("about-close").addEventListener("click", () => modal.classList.remove("show"));
+  modal.querySelector(".modal-backdrop").addEventListener("click", () => modal.classList.remove("show"));
+
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "Space") {
+      e.preventDefault();
+      state.playing = !state.playing;
+      syncPlayIcons();
+    } else if (e.key === "ArrowLeft") {
+      state.currentTime = (state.currentTime - 900 + SECONDS_IN_DAY) % SECONDS_IN_DAY;
+    } else if (e.key === "ArrowRight") {
+      state.currentTime = (state.currentTime + 900) % SECONDS_IN_DAY;
+    } else if (e.key.toLowerCase() === "r") {
+      state.currentTime = 0;
+    }
+  });
+}
+
+loader.init();
+loadData().catch(err => {
+  console.error(err);
+  document.getElementById("loader-status").textContent = "Erreur de chargement : " + err.message;
+});
+</script>
+</body>
+</html>

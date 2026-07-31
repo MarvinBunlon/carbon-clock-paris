@@ -1,0 +1,92 @@
+{
+  "title": "Carbon Clock — Paris",
+  "built_at": "2026-07-31T10:22:51.609811+00:00",
+  "traffic_day": "2026-07-29",
+  "traffic_records": 10000,
+  "arcs": 220,
+  "trips": 14000,
+  "air_stations": 16,
+  "correlation_traffic_no2": 0.881,
+  "sources": [
+    {
+      "layer": "Trafic / émissions",
+      "name": "Comptages routiers permanents + référentiel",
+      "publisher": "Ville de Paris / Open Data Paris",
+      "url": "https://opendata.paris.fr/explore/dataset/comptages-routiers-permanents/"
+    },
+    {
+      "layer": "Qualité de l'air",
+      "name": "CAMS via Open-Meteo (PM2.5, NO2)",
+      "publisher": "Open-Meteo / Copernicus CAMS",
+      "url": "https://open-meteo.com/en/docs/air-quality-api"
+    },
+    {
+      "layer": "Trajets (synthétiques)",
+      "name": "Flux dérivés des arcs de comptage réels",
+      "publisher": "POC carbon-clock-paris",
+      "url": ""
+    }
+  ],
+  "notes": [
+    "Les trajets sont synthetiques, ancrés sur la géométrie réelle des arcs de comptage.",
+    "Les émissions CO2 sont une proxy (volume x longueur x facteur flotte urbaine).",
+    "Correlation 24h trafic-NO2: r=-0.014 (faible: photochimie estivale).",
+    "Correlation pointe matin 6-10h: r=0.881.",
+    "Correlation pointe soir 16-20h: r=-0.922."
+  ],
+  "hourly_traffic_mean": [
+    71.8,
+    48.7,
+    302.8,
+    211.4,
+    156.0,
+    115.8,
+    184.5,
+    287.1,
+    317.8,
+    297.3,
+    266.6,
+    256.3,
+    271.7,
+    276.8,
+    281.9,
+    297.3,
+    328.1,
+    348.6,
+    307.6,
+    230.7,
+    164.0,
+    128.2,
+    102.5,
+    82.0
+  ],
+  "hourly_no2_mean": [
+    22.39,
+    20.94,
+    17.55,
+    13.79,
+    12.83,
+    13.94,
+    21.53,
+    31.64,
+    43.26,
+    44.59,
+    38.98,
+    25.4,
+    16.22,
+    7.81,
+    5.16,
+    4.83,
+    5.01,
+    5.43,
+    6.61,
+    7.97,
+    8.19,
+    12.48,
+    15.95,
+    26.71
+  ],
+  "correlation_traffic_no2_all_day": -0.014,
+  "correlation_traffic_no2_morning_rush": 0.881,
+  "correlation_traffic_no2_evening_rush": -0.922
+}

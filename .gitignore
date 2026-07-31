@@ -1,0 +1,5 @@
+data/ref_raw.geojson
+data/traffic_sample.json
+data/traffic_day_raw.json
+__pycache__/
+.DS_Store
