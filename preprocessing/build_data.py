@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / "data"
+DATA = ROOT / "data" / "paris"
 DATA.mkdir(exist_ok=True)
 
 # g CO2 / km — approximate mixed urban fleet (ADEME ordre de grandeur VP)
@@ -178,8 +178,11 @@ def citywide_profile(arc_hourly: dict) -> list[float]:
     return filled
 
 
-def load_referentiel(limit_arcs: int = 220):
-    ref = json.loads((DATA / "ref_raw.geojson").read_text(encoding="utf-8"))
+def load_referentiel(limit_arcs: int = 480):
+    ref_path = DATA / "ref_raw.geojson"
+    if not ref_path.exists():
+        ref_path = DATA.parent / "ref_raw.geojson"
+    ref = json.loads(ref_path.read_text(encoding="utf-8"))
     features = []
     for feat in ref["features"]:
         geom = feat.get("geometry") or {}
@@ -190,8 +193,8 @@ def load_referentiel(limit_arcs: int = 220):
             continue
         props = feat["properties"]
         lon, lat = centroid(coords)
-        # Keep intramuros-ish bounding box
-        if not (2.25 <= lon <= 2.42 and 48.81 <= lat <= 48.91):
+        # Paris + petite couronne (capteurs permanents Ville de Paris)
+        if not (2.18 <= lon <= 2.48 and 48.78 <= lat <= 48.96):
             continue
         features.append(
             {
@@ -204,12 +207,32 @@ def load_referentiel(limit_arcs: int = 220):
             }
         )
 
-    # Prefer longer / central arcs: score by inverse distance to centre + length
-    centre = (2.3522, 48.8566)
-    features.sort(
-        key=lambda a: (-a["length_km"] / (0.2 + haversine_km((a["lon"], a["lat"]), centre))),
-    )
-    return features[:limit_arcs]
+    # Spatial grid sample: couverture homogène, pas de cluster centre
+    grid = 8
+    min_lon, max_lon = 2.20, 2.46
+    min_lat, max_lat = 48.80, 48.92
+    cells = [[] for _ in range(grid * grid)]
+    for a in features:
+        gx = int(((a["lon"] - min_lon) / (max_lon - min_lon)) * grid)
+        gy = int(((a["lat"] - min_lat) / (max_lat - min_lat)) * grid)
+        gx = max(0, min(grid - 1, gx))
+        gy = max(0, min(grid - 1, gy))
+        cells[gy * grid + gx].append(a)
+    for cell in cells:
+        cell.sort(key=lambda a: -a["length_km"])
+    picked = []
+    while len(picked) < limit_arcs:
+        added = False
+        for cell in cells:
+            if len(picked) >= limit_arcs:
+                break
+            if not cell:
+                continue
+            picked.append(cell.pop(0))
+            added = True
+        if not added:
+            break
+    return picked
 
 
 def fetch_air_quality():
@@ -411,12 +434,14 @@ def pearson(xs, ys):
 
 
 def main():
+    import sys
+
     print("Loading referentiel…")
-    arcs = load_referentiel(220)
+    arcs = load_referentiel(480)
     print(f"  selected arcs: {len(arcs)}")
 
     print("Fetching traffic day…")
-    day = fetch_newest_day()
+    day = sys.argv[1] if len(sys.argv) > 1 else fetch_newest_day()
     print(f"  day: {day}")
     rows = fetch_traffic_day(day, max_records=12000)
     (DATA / "traffic_day_raw.json").write_text(

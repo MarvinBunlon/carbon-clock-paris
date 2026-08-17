@@ -1,0 +1,76 @@
+{
+  "default": "paris",
+  "cities": {
+    "paris": {
+      "id": "paris",
+      "label": "Région parisienne",
+      "shortLabel": "Paris",
+      "center": [2.34, 48.86],
+      "bounds": [[2.05, 48.72], [2.62, 49.02]],
+      "core": [2.3522, 48.8566],
+      "maxBounds": [[1.85, 48.55], [2.85, 49.15]],
+      "peripheryDist": 0.045,
+      "fitMaxZoom": 10.4,
+      "coreLabel": "Paris",
+      "peripheryLabel": "banlieue",
+      "provenance": "Open Data Paris · OSM · Open-Meteo CAMS",
+      "loaderHint": "Trafic Paris + axes OSM · air Open-Meteo / CAMS",
+      "aboutLead": "Carbon Clock : croiser mobilité (Paris Open Data + axes OSM) et pollution (CAMS) sur 24 h.",
+      "captions": [
+        { "t": 10800, "text": "3 h — Paris respire à peine. Les axes s'éteignent, le NO₂ plonge." },
+        { "t": 28800, "text": "8 h — Choc matinal. Les flux bleus convergent, le NO₂ explose." },
+        { "t": 46800, "text": "13 h — Pression continue. Périphérique et portes restent en rouge." },
+        { "t": 64800, "text": "18 h — Pic trafic, mais NO₂ bas : en été la photochimie casse le lien du matin." },
+        { "t": 79200, "text": "22 h — La ville décélère. L'air et le trafic se recalent peu à peu." }
+      ]
+    },
+    "lyon": {
+      "id": "lyon",
+      "label": "Métropole de Lyon",
+      "shortLabel": "Lyon",
+      "airBoost": 1.35,
+      "center": [4.835, 45.764],
+      "bounds": [[4.65, 45.68], [5.05, 45.85]],
+      "core": [4.836, 45.758],
+      "maxBounds": [[4.45, 45.55], [5.25, 45.95]],
+      "peripheryDist": 0.035,
+      "fitMaxZoom": 10.6,
+      "coreLabel": "Lyon centre",
+      "peripheryLabel": "périphérie",
+      "provenance": "Axes OSM · air Open-Meteo CAMS",
+      "loaderHint": "Trafic OSM métropole · air Open-Meteo / CAMS",
+      "aboutLead": "Carbon Clock Lyon : mobilité (axes OSM) et pollution (CAMS) sur 24 h en métropole.",
+      "captions": [
+        { "t": 10800, "text": "3 h — Lyon dort. Rhône et Saône au calme, pollution en chute." },
+        { "t": 28800, "text": "8 h — Pointe matinale. Part-Dieu et périph convergent vers le centre." },
+        { "t": 46800, "text": "13 h — Trafic soutenu sur l'A6, l'A7 et les boulevards lyonnais." },
+        { "t": 64800, "text": "18 h — Sortie de bureau : flux rouges vers Villeurbanne et la périph." },
+        { "t": 79200, "text": "22 h — La métropole ralentit. NO₂ et trafic redescendent." }
+      ]
+    },
+    "marseille": {
+      "id": "marseille",
+      "label": "Métropole Aix-Marseille",
+      "shortLabel": "Marseille",
+      "airBoost": 1.35,
+      "center": [5.37, 43.30],
+      "bounds": [[5.12, 43.17], [5.58, 43.42]],
+      "core": [5.369, 43.296],
+      "maxBounds": [[4.92, 43.02], [5.78, 43.48]],
+      "peripheryDist": 0.04,
+      "fitMaxZoom": 10.5,
+      "coreLabel": "Marseille centre",
+      "peripheryLabel": "périphérie",
+      "provenance": "Axes OSM · air Open-Meteo CAMS",
+      "loaderHint": "Trafic OSM métropole · air Open-Meteo / CAMS",
+      "aboutLead": "Carbon Clock Marseille : mobilité (axes OSM) et pollution (CAMS) sur 24 h en métropole.",
+      "captions": [
+        { "t": 10800, "text": "3 h — Marseille au repos. Le Vieux-Port et les autoroutes se taisent." },
+        { "t": 28800, "text": "8 h — Rush matinal. A7 et A50 alimentent le centre en flux bleus." },
+        { "t": 46800, "text": "13 h — Midi méditerranéen : trafic dense, photochimie estivale en jeu." },
+        { "t": 64800, "text": "18 h — Pic du soir sur la Canebière et les axes est-ouest." },
+        { "t": 79200, "text": "22 h — Brise du soir. Trafic et NO₂ retombent sur l'étang et les calanques." }
+      ]
+    }
+  }
+}

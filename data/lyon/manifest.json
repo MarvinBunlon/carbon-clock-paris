@@ -1,0 +1,108 @@
+{
+  "title": "Carbon Clock — Lyon",
+  "city": "lyon",
+  "built_at": "2026-08-17T09:21:49.276488+00:00",
+  "traffic_day": "2026-08-17",
+  "traffic_records": 0,
+  "arcs": 850,
+  "trips": 11000,
+  "air_stations": 25,
+  "correlation_traffic_no2": 0.526,
+  "correlation_traffic_no2_all_day": -0.508,
+  "correlation_traffic_no2_morning_rush": 0.526,
+  "correlation_traffic_no2_evening_rush": -0.956,
+  "hourly_traffic_mean": [
+    71.8,
+    48.7,
+    302.8,
+    211.4,
+    156.0,
+    115.8,
+    184.5,
+    287.1,
+    317.8,
+    297.3,
+    266.6,
+    256.3,
+    271.7,
+    276.8,
+    281.9,
+    297.3,
+    328.1,
+    348.6,
+    307.6,
+    230.7,
+    164.0,
+    128.2,
+    102.5,
+    82.0
+  ],
+  "hourly_no2_mean": [
+    15.53,
+    14.38,
+    15.76,
+    13.73,
+    11.74,
+    10.82,
+    10.45,
+    13.34,
+    12.99,
+    10.19,
+    6.8,
+    5.15,
+    3.73,
+    2.9,
+    2.94,
+    3.02,
+    2.92,
+    3.0,
+    3.08,
+    4.57,
+    6.8,
+    9.04,
+    9.56,
+    10.86
+  ],
+  "sources": [
+    {
+      "layer": "Trafic / émissions",
+      "name": "Axes OSM (motorway, trunk, primary, secondary)",
+      "publisher": "OpenStreetMap via Overpass",
+      "url": "https://www.openstreetmap.org"
+    },
+    {
+      "layer": "Qualité de l'air",
+      "name": "CAMS via Open-Meteo (PM2.5, NO2)",
+      "publisher": "Open-Meteo / Copernicus CAMS",
+      "url": "https://open-meteo.com/en/docs/air-quality-api"
+    },
+    {
+      "layer": "Trajets (synthétiques)",
+      "name": "Flux dérivés des axes OSM",
+      "publisher": "POC carbon-clock-paris",
+      "url": ""
+    }
+  ],
+  "notes": [
+    "Profil horaire trafic : journée type urbaine (proxy, pas de comptages locaux).",
+    "Les émissions CO2 sont une proxy (volume x longueur x facteur flotte urbaine).",
+    "Correlation 24h trafic-NO2: r=-0.508.",
+    "Correlation pointe matin 6-10h: r=0.526.",
+    "Correlation pointe soir 16-20h: r=-0.956.",
+    "Qualité de l'air : 25 points CAMS nommés (Métropole de Lyon)."
+  ],
+  "region": {
+    "label": "Métropole de Lyon",
+    "bbox": [
+      4.65,
+      45.68,
+      5.05,
+      45.85
+    ],
+    "city_arcs": 0,
+    "regional_arcs_osm": 850,
+    "sources_extra": [
+      "OpenStreetMap Overpass API"
+    ]
+  }
+}

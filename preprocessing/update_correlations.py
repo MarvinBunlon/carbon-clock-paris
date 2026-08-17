@@ -3,7 +3,7 @@ import math
 import statistics
 from pathlib import Path
 
-p = Path(__file__).resolve().parents[1] / "data"
+p = Path(__file__).resolve().parents[1] / "data" / "paris"
 m = json.loads((p / "manifest.json").read_text(encoding="utf-8"))
 xs = m["hourly_traffic_mean"]
 ys = m["hourly_no2_mean"]
