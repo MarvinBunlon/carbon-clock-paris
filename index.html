@@ -497,7 +497,8 @@ html, body {
 
 <div id="status-line">
   <span class="key">espace</span> lecture ·
-  <span class="key">←/→</span> défiler ·
+  <span class="key">←/→</span> naviguer ·
+  <span class="key">shift+←/→</span> défiler ·
   <span class="key">R</span> minuit
 </div>
 
@@ -624,7 +625,7 @@ html, body {
       <ul>
         <li>Pastilles <strong>Flux · Émissions · Air</strong> en bas : activer / masquer chaque couche. Les axes routiers restent toujours visibles en fond.</li>
         <li>Curseur temporel + vitesses 1× à 10× pour avancer dans la journée simulée.</li>
-        <li><span class="legend-kbd">espace</span> lecture / pause · <span class="legend-kbd">←</span> <span class="legend-kbd">→</span> ±15 min · <span class="legend-kbd">R</span> minuit · <span class="legend-kbd">Échap</span> fermer les fenêtres.</li>
+        <li><span class="legend-kbd">espace</span> lecture / pause · <span class="legend-kbd">←</span> <span class="legend-kbd">→</span> naviguer · <span class="legend-kbd">shift+←/→</span> ±15 min · <span class="legend-kbd">R</span> minuit · <span class="legend-kbd">Échap</span> fermer les fenêtres.</li>
       </ul>
     </div>
   </div>
@@ -1560,12 +1561,86 @@ function timestampsAlong(path, t0, t1) {
   return out;
 }
 
+const PARIS_PETITE_COURONNE_R = 0.095;
+
+function mapKeyTargetOk(e) {
+  const tag = e.target?.tagName;
+  return tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT" && !e.target?.isContentEditable;
+}
+
+function emissionSeriesMean(arr) {
+  if (!arr?.length) return 0;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+/** Paris — complète la grande couronne via axes OSM (profil trafic Paris, grille homogène). */
+function sampleGrandeCouronneGrid(scored, limit) {
+  const GRID = 11;
+  const minLon = 2.06;
+  const maxLon = 2.61;
+  const minLat = 48.73;
+  const maxLat = 49.01;
+  const cells = Array.from({ length: GRID * GRID }, () => []);
+  for (const item of scored) {
+    let gx = Math.floor(((item.lng - minLon) / (maxLon - minLon)) * GRID);
+    let gy = Math.floor(((item.lat - minLat) / (maxLat - minLat)) * GRID);
+    gx = Math.max(0, Math.min(GRID - 1, gx));
+    gy = Math.max(0, Math.min(GRID - 1, gy));
+    cells[gy * GRID + gx].push(item);
+  }
+  for (const cell of cells) cell.sort((a, b) => b._score - a._score);
+  const picked = [];
+  while (picked.length < limit) {
+    let added = false;
+    for (const cell of cells) {
+      if (picked.length >= limit) break;
+      if (!cell.length) continue;
+      const { _score, ...rest } = cell.shift();
+      picked.push(rest);
+      added = true;
+    }
+    if (!added) break;
+  }
+  return picked;
+}
+
+function buildGrandeCouronneEmissions(arcsGeo) {
+  const scored = [];
+  for (const f of arcsGeo?.features || []) {
+    const p = f.properties || {};
+    if (!p.synthetic || !p.hourly_intensity?.length) continue;
+    const coords = f.geometry?.coordinates;
+    if (!coords?.length) continue;
+    const lon = coords.reduce((s, c) => s + c[0], 0) / coords.length;
+    const lat = coords.reduce((s, c) => s + c[1], 0) / coords.length;
+    if (distFromCore(lon, lat) <= PARIS_PETITE_COURONNE_R) continue;
+    const hwyW = { motorway: 1, trunk: 0.92, primary: 0.78, motorway_link: 0.65 }[p.highway] || 0.68;
+    scored.push({
+      id: `gc_${p.id}`,
+      name: p.name,
+      lng: lon,
+      lat,
+      hourly_intensity: p.hourly_intensity,
+      hourly_volume: p.hourly_volume,
+      region_ring: "grande_couronne",
+      _score: featureLength(coords) * hwyW * emissionSeriesMean(p.hourly_intensity),
+    });
+  }
+  return sampleGrandeCouronneGrid(scored, 280);
+}
+
+function mergeParisGrandeCouronneEmissions(base, arcsGeo) {
+  const real = base.filter((e) => e.region_ring !== "grande_couronne");
+  return real.concat(buildGrandeCouronneEmissions(arcsGeo));
+}
+
 function ensureEmissionsBuf() {
   if (state.emissionsBuf && state.emissionsBuf.length === state.emissions.length) return;
   state.emissionsBuf = state.emissions.map((d) => ({
     position: [d.lng, d.lat],
     weight: 0,
     src: d,
+    weightScale: d.region_ring === "grande_couronne" ? 1.55 : 1,
   }));
 }
 
@@ -1577,10 +1652,18 @@ function buildHeavyLayers(t) {
   ensureEmissionsBuf();
   const dens = trafficDensity(t);
   const city = trafficAt(t);
-  // Poids recalculés à l’heure courante — nuit ≈ éteint, pointe ≈ saturé
+  const paris = state.cityId === "paris";
+  const parisDim = paris ? 0.78 : 1;
   for (const row of state.emissionsBuf) {
     const local = sampleHourly(row.src.hourly_intensity, t);
-    row.weight = Math.max(0, local * (0.2 + 0.8 * dens) * (0.15 + 0.85 * city));
+    const scale = row.weightScale || 1;
+    const mix = (0.2 + 0.8 * dens) * (0.15 + 0.85 * city);
+    let w = local * scale * mix * parisDim;
+    if (row.src.region_ring === "grande_couronne") {
+      const base = emissionSeriesMean(row.src.hourly_intensity) * (0.25 + 0.75 * dens);
+      w = Math.max(w, base * 1.05 * parisDim);
+    }
+    row.weight = Math.max(0, w);
   }
 
   layers.push(new deck.HeatmapLayer({
@@ -1588,10 +1671,9 @@ function buildHeavyLayers(t) {
     data: state.emissionsBuf,
     getPosition: (d) => d.position,
     getWeight: (d) => d.weight,
-    radiusPixels: q.heatmapRadius * (0.85 + 0.4 * dens),
-    // Intensité heatmap pilotée par le trafic (très visible le matin / soir)
-    intensity: 0.4 + 1.7 * dens,
-    threshold: 0.03 + 0.08 * (1 - dens),
+    radiusPixels: q.heatmapRadius * (paris ? 1.06 : 1) * (0.85 + 0.4 * dens),
+    intensity: paris ? 0.42 + 1.45 * dens : 0.4 + 1.7 * dens,
+    threshold: paris ? 0.028 : 0.03 + 0.08 * (1 - dens),
     colorRange: [
       [77, 184, 232, 0],
       [77, 184, 232, 70],
@@ -1599,7 +1681,8 @@ function buildHeavyLayers(t) {
       [232, 93, 76, 220],
       [255, 190, 130, 245],
     ],
-    opacity: 0.35 + 0.55 * dens,
+    opacity: paris ? 0.26 + 0.42 * dens : 0.35 + 0.55 * dens,
+    pickable: false,
     updateTriggers: {
       getWeight: [Math.floor(t / 45), Math.floor(dens * 20)],
     },
@@ -1710,6 +1793,7 @@ function buildLayers(t) {
       shadowEnabled: false,
       capRounded: true,
       jointRounded: true,
+      pickable: false,
     }));
   }
 
@@ -1737,6 +1821,7 @@ function buildLayers(t) {
         shadowEnabled: false,
         capRounded: true,
         jointRounded: true,
+        pickable: false,
       }));
     }
   }
@@ -1854,6 +1939,15 @@ async function initMap() {
     },
   });
   map.addControl(deckOverlay);
+  map.dragPan.enable();
+  map.touchZoomRotate.enable();
+
+  // Scroll horizontal (trackpad / souris) → pan est-ouest
+  map.getCanvas().addEventListener("wheel", (e) => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    map.panBy([-e.deltaX, 0], { duration: 0 });
+  }, { passive: false });
 }
 
 function fillLegend() {
@@ -1985,16 +2079,28 @@ function bindUI() {
       e.preventDefault();
       state.playing = !state.playing;
       syncPlay();
-    } else if (e.key === "ArrowLeft") {
+    } else if (e.key === "ArrowLeft" && e.shiftKey && mapKeyTargetOk(e)) {
       state.currentTime = (state.currentTime - 900 + SECONDS_IN_DAY) % SECONDS_IN_DAY;
       state.flowDensityBucket = -1;
       ensureFlowTrips(state.currentTime, true);
       render(true);
-    } else if (e.key === "ArrowRight") {
+    } else if (e.key === "ArrowRight" && e.shiftKey && mapKeyTargetOk(e)) {
       state.currentTime = (state.currentTime + 900) % SECONDS_IN_DAY;
       state.flowDensityBucket = -1;
       ensureFlowTrips(state.currentTime, true);
       render(true);
+    } else if (e.key === "ArrowLeft" && map && mapKeyTargetOk(e)) {
+      e.preventDefault();
+      map.panBy([-130, 0], { duration: 0 });
+    } else if (e.key === "ArrowRight" && map && mapKeyTargetOk(e)) {
+      e.preventDefault();
+      map.panBy([130, 0], { duration: 0 });
+    } else if (e.key === "ArrowUp" && map && mapKeyTargetOk(e)) {
+      e.preventDefault();
+      map.panBy([0, -90], { duration: 0 });
+    } else if (e.key === "ArrowDown" && map && mapKeyTargetOk(e)) {
+      e.preventDefault();
+      map.panBy([0, 90], { duration: 0 });
     } else if (e.key.toLowerCase() === "r") {
       state.currentTime = 0;
       state.flowDensityBucket = -1;
@@ -2026,6 +2132,12 @@ async function loadCityData() {
 
   loader.progress(55, "Axes routiers…");
   state.arcs = await fetch(`${prefix}arcs.json`).then((r) => r.json());
+  if (state.cityId === "paris") {
+    state.emissions = mergeParisGrandeCouronneEmissions(state.emissions, state.arcs);
+    state.emissionsBuf = null;
+    state.cachedHeavyLayers = [];
+    state.lastHeavyBucket = -1;
+  }
 
   loader.progress(70, "Flux de mobilité…");
   state.tripsAll = enrichTrips(await fetch(`${prefix}trips.json`).then((r) => r.json()));

@@ -2,7 +2,7 @@
   "title": "Carbon Clock — Paris",
   "built_at": "2026-08-17T09:24:27.801994+00:00",
   "traffic_day": "2026-07-29",
-  "traffic_records": 10000,
+  "traffic_records": 71448,
   "arcs": 850,
   "trips": 18000,
   "air_stations": 36,
@@ -103,5 +103,6 @@
       "OpenStreetMap major roads (motorway/trunk/primary) via Overpass — intensités synthétiques calées sur le profil Paris",
       "Open-Meteo CAMS air quality on regional sample points"
     ]
-  }
+  },
+  "emission_points": 1889
 }
