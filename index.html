@@ -268,6 +268,88 @@ html, body {
 #legend-btn:hover { border-color: var(--seine); color: var(--ink); }
 #legend-btn svg { width: 14px; height: 14px; fill: currentColor; opacity: 0.85; }
 
+#analytics-btn {
+  position: fixed; left: 28px; bottom: 198px; z-index: 10;
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  background: rgba(12,18,26,0.92); border: 1px solid rgba(244,241,236,0.14);
+  border-radius: 999px;
+  font-family: var(--font-body); font-size: 0.72rem; font-weight: 500;
+  color: var(--muted); cursor: pointer;
+  backdrop-filter: blur(12px);
+  letter-spacing: 0.04em;
+}
+#analytics-btn:hover { border-color: var(--copper); color: var(--ink); }
+#analytics-btn svg { width: 14px; height: 14px; fill: currentColor; opacity: 0.85; }
+
+#analytics-panel {
+  position: fixed; inset: 0; z-index: 55;
+  display: none; flex-direction: column;
+  background: rgba(10, 14, 20, 0.97);
+  backdrop-filter: blur(18px);
+  overflow: auto;
+}
+#analytics-panel.show { display: flex; }
+.analytics-header {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  background: rgba(10, 14, 20, 0.92);
+  border-bottom: 1px solid var(--border);
+}
+.analytics-header h2 {
+  margin: 0; font-family: var(--font-display); font-size: 1.15rem; letter-spacing: 0.04em;
+}
+.analytics-header .meta { color: var(--muted); font-size: 0.78rem; margin-top: 0.2rem; }
+.analytics-close {
+  border: 1px solid var(--border); background: transparent; color: var(--muted);
+  border-radius: 999px; padding: 0.45rem 0.85rem; font-size: 0.72rem; cursor: pointer;
+}
+.analytics-close:hover { border-color: var(--seine); color: var(--ink); }
+.analytics-body {
+  padding: 1.25rem 1.5rem 2rem;
+  max-width: 980px; width: 100%; margin: 0 auto;
+}
+.analytics-kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 0.75rem; margin-bottom: 1.25rem;
+}
+.analytics-kpi {
+  padding: 0.85rem 0.95rem; border-radius: 12px;
+  border: 1px solid var(--border); background: rgba(255,255,255,0.02);
+}
+.analytics-kpi .label {
+  font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+}
+.analytics-kpi .value {
+  font-family: var(--font-mono); font-size: 1.35rem; margin-top: 0.35rem; color: var(--ink);
+}
+.analytics-kpi .hint { font-size: 0.68rem; color: var(--muted); margin-top: 0.25rem; line-height: 1.35; }
+.analytics-section {
+  margin: 1.1rem 0; padding: 1rem 1.05rem;
+  border: 1px solid var(--border); border-radius: 14px;
+  background: rgba(255,255,255,0.015);
+}
+.analytics-section h3 {
+  margin: 0 0 0.65rem; font-family: var(--font-display); font-size: 0.82rem;
+  letter-spacing: 0.07em; text-transform: uppercase; color: var(--seine);
+}
+.analytics-section p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
+.analytics-legend {
+  display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; margin-top: 0.55rem;
+  font-size: 0.68rem; color: var(--muted);
+}
+.analytics-legend i {
+  display: inline-block; width: 18px; height: 3px; border-radius: 2px; margin-right: 0.35rem;
+  vertical-align: middle;
+}
+.analytics-svg { width: 100%; height: auto; display: block; }
+.analytics-insights {
+  margin-top: 0.5rem; padding-left: 1.1rem; color: var(--muted); font-size: 0.82rem; line-height: 1.55;
+}
+.analytics-insights li { margin: 0.35rem 0; }
+.analytics-insights strong { color: var(--ink); font-weight: 600; }
+
 .legend-section {
   margin: 0.85rem 0; padding: 0.85rem 0.95rem;
   border: 1px solid var(--border); border-radius: 12px;
@@ -406,6 +488,7 @@ html, body {
 @media (max-width: 820px) {
   #stats, #status-line { display: none; }
   #legend-btn { bottom: 118px; left: 12px; font-size: 0.68rem; padding: 0.5rem 0.75rem; }
+  #analytics-btn { bottom: 168px; left: 12px; font-size: 0.68rem; padding: 0.5rem 0.75rem; }
   #traffic-legend { top: auto; bottom: 118px; right: 12px; }
   #caption { top: 84px; font-size: 0.8rem; }
   #controls { gap: 0.55rem; padding: 0 0.8rem; flex-wrap: wrap; height: auto; min-height: 76px; }
@@ -488,6 +571,22 @@ html, body {
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2.5h12v1.2H2V2.5Zm0 3.2h8v1.2H2V5.7Zm0 3.2h10v1.2H2V8.9Zm0 3.2h6v1.2H2v-1.2Z"/></svg>
   Légende
 </button>
+
+<button id="analytics-btn" type="button" aria-label="Vue analyse des données">
+  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13h2V7H2v6Zm4 0h2V3H6v10Zm4 0h2V9h-2v4Zm4 0h2V1h-2v12Z"/></svg>
+  Analyse
+</button>
+
+<div id="analytics-panel" role="dialog" aria-modal="true" aria-labelledby="analytics-title">
+  <div class="analytics-header">
+    <div>
+      <h2 id="analytics-title">Analyse croisée</h2>
+      <div class="meta" id="analytics-meta">Traitements calculés à partir des données chargées</div>
+    </div>
+    <button type="button" class="analytics-close" id="analytics-close">← Retour carte</button>
+  </div>
+  <div class="analytics-body" id="analytics-body"></div>
+</div>
 
 <div id="attribution">
   Données : Open Data / OSM · Open-Meteo / CAMS<br>
@@ -718,6 +817,7 @@ const state = {
   lastStatsAt: 0,
   lastHeavyBucket: -1,
   cachedHeavyLayers: [],
+  analyticsOpen: false,
 };
 
 let map, deckOverlay;
@@ -1950,6 +2050,305 @@ async function initMap() {
   }, { passive: false });
 }
 
+function pearson(a, b) {
+  const n = Math.min(a.length, b.length);
+  if (n < 2) return 0;
+  let sx = 0, sy = 0;
+  for (let i = 0; i < n; i++) { sx += a[i]; sy += b[i]; }
+  const mx = sx / n, my = sy / n;
+  let num = 0, dx = 0, dy = 0;
+  for (let i = 0; i < n; i++) {
+    const px = a[i] - mx, py = b[i] - my;
+    num += px * py;
+    dx += px * px;
+    dy += py * py;
+  }
+  const den = Math.sqrt(dx * dy);
+  return den ? num / den : 0;
+}
+
+function slicePearson(a, b, hours) {
+  const xs = hours.map((h) => a[h] ?? 0);
+  const ys = hours.map((h) => b[h] ?? 0);
+  return pearson(xs, ys);
+}
+
+function hourlyPollutantMean(stations, key) {
+  const sums = Array(24).fill(0);
+  const n = stations.length || 1;
+  for (const st of stations) {
+    const arr = st[key] || [];
+    for (let h = 0; h < 24; h++) sums[h] += arr[h] ?? 0;
+  }
+  return sums.map((v) => v / n);
+}
+
+function hourlyEmissionsMean() {
+  const sums = Array(24).fill(0);
+  const n = state.emissions.length || 1;
+  for (const e of state.emissions) {
+    const arr = e.hourly_intensity || [];
+    for (let h = 0; h < 24; h++) sums[h] += arr[h] ?? 0;
+  }
+  return sums.map((v) => v / n);
+}
+
+function peakHourIndex(arr) {
+  let best = 0, val = -Infinity;
+  for (let h = 0; h < arr.length; h++) {
+    if (arr[h] > val) { val = arr[h]; best = h; }
+  }
+  return best;
+}
+
+function crossCorrBestLag(a, b, maxLag = 6) {
+  let bestLag = 0, bestR = -Infinity;
+  for (let lag = -maxLag; lag <= maxLag; lag++) {
+    const xs = [], ys = [];
+    for (let h = 0; h < 24; h++) {
+      const j = h + lag;
+      if (j < 0 || j >= 24) continue;
+      xs.push(a[h]);
+      ys.push(b[j]);
+    }
+    if (xs.length < 4) continue;
+    const r = pearson(xs, ys);
+    if (r > bestR) { bestR = r; bestLag = lag; }
+  }
+  return { lag: bestLag, r: bestR };
+}
+
+function normSeries(arr) {
+  const peak = Math.max(...arr, 1e-9);
+  return arr.map((v) => v / peak);
+}
+
+function svgHourGrid(w, h, pad) {
+  const innerW = w - pad * 2;
+  const labels = [0, 6, 12, 18, 23];
+  return labels.map((hr) => {
+    const x = pad + (hr / 23) * innerW;
+    return `<line x1="${x}" y1="${pad}" x2="${x}" y2="${h - pad}" stroke="rgba(244,241,236,0.06)" stroke-width="1"/>
+      <text x="${x}" y="${h - 8}" text-anchor="middle" fill="rgba(244,241,236,0.35)" font-size="10" font-family="monospace">${hr}h</text>`;
+  }).join("");
+}
+
+function svgMultiLine(seriesList, w = 680, h = 200, pad = 36) {
+  const innerW = w - pad * 2, innerH = h - pad * 2;
+  const paths = seriesList.map((s) => {
+    const vals = normSeries(s.values);
+    const d = vals.map((v, i) => {
+      const x = pad + (i / 23) * innerW;
+      const y = pad + innerH - v * innerH;
+      return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2" opacity="0.92"/>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" class="analytics-svg" role="img" aria-label="Profils horaires normalisés">
+    ${svgHourGrid(w, h, pad)}${paths}
+  </svg>`;
+}
+
+function svgScatter(traffic, no2, w = 680, h = 220, pad = 44) {
+  const innerW = w - pad * 2, innerH = h - pad * 2;
+  const maxX = Math.max(...traffic, 1e-6);
+  const maxY = Math.max(...no2, 1e-6);
+  const dots = traffic.map((x, h) => {
+    const px = pad + (x / maxX) * innerW;
+    const py = pad + innerH - (no2[h] / maxY) * innerH;
+    const rush = h >= 6 && h <= 10 ? "var(--seine)" : h >= 16 && h <= 20 ? "var(--alert)" : "var(--copper)";
+    return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5.5" fill="${rush}" opacity="0.82"/>
+      <title>${h}h · trafic ${x.toFixed(0)} · NO₂ ${no2[h].toFixed(1)} µg/m³</title>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" class="analytics-svg" role="img" aria-label="Nuage trafic versus NO₂">
+    <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="rgba(244,241,236,0.15)"/>
+    <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="rgba(244,241,236,0.15)"/>
+    <text x="${w / 2}" y="${h - 6}" text-anchor="middle" fill="rgba(244,241,236,0.4)" font-size="10">Trafic horaire moyen</text>
+    <text x="12" y="${h / 2}" transform="rotate(-90 12 ${h / 2})" text-anchor="middle" fill="rgba(244,241,236,0.4)" font-size="10">NO₂ µg/m³</text>
+    ${dots}
+  </svg>`;
+}
+
+function svgGapChart(core, ban, w = 680, h = 180, pad = 36) {
+  const innerW = w - pad * 2, innerH = h - pad * 2;
+  const maxY = Math.max(...core, ...ban, 1e-6);
+  const line = (arr, color) => {
+    const d = arr.map((v, i) => {
+      const x = pad + (i / 23) * innerW;
+      const y = pad + innerH - (v / maxY) * innerH;
+      return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.2"/>`;
+  };
+  return `<svg viewBox="0 0 ${w} ${h}" class="analytics-svg" role="img" aria-label="NO₂ centre versus banlieue">
+    ${svgHourGrid(w, h, pad)}
+    ${line(core, "var(--seine)")}${line(ban, "var(--alert)")}
+  </svg>`;
+}
+
+function buildAnalyticsData() {
+  const m = state.manifest || {};
+  const traffic = (m.hourly_traffic_mean || state.trafficProfile.map((v) => v * 100)).slice(0, 24);
+  const no2 = (m.hourly_no2_mean || hourlyPollutantMean(state.airquality, "hourly_no2")).slice(0, 24);
+  const pm25 = hourlyPollutantMean(state.airquality, "hourly_pm25");
+  const emissions = hourlyEmissionsMean();
+  const coreSt = state.airquality.filter((s) => !isPeripheryStation(s));
+  const banSt = state.airquality.filter((s) => isPeripheryStation(s));
+  const no2Core = hourlyPollutantMean(coreSt, "hourly_no2");
+  const no2Ban = hourlyPollutantMean(banSt, "hourly_no2");
+  const morning = [6, 7, 8, 9, 10];
+  const evening = [16, 17, 18, 19, 20];
+  const lag = crossCorrBestLag(traffic, no2, 5);
+  const gapPeak = peakHourIndex(no2Core.map((v, h) => Math.abs(v - (no2Ban[h] || 0))));
+  return {
+    traffic, no2, pm25, emissions, no2Core, no2Ban,
+    corrAll: pearson(traffic, no2),
+    corrMorning: slicePearson(traffic, no2, morning),
+    corrEvening: slicePearson(traffic, no2, evening),
+    corrEmNo2: pearson(emissions, no2),
+    corrTrafficPm: pearson(traffic, pm25),
+    lag,
+    peakTraffic: peakHourIndex(traffic),
+    peakNo2: peakHourIndex(no2),
+    peakEm: peakHourIndex(emissions),
+    gapPeak,
+    nEmissions: state.emissions.length,
+    nAir: state.airquality.length,
+    nCore: coreSt.length,
+    nBan: banSt.length,
+    day: m.traffic_day || "—",
+  };
+}
+
+function buildAnalyticsInsights(d) {
+  const items = [];
+  const fmtR = (r) => (r >= 0 ? "+" : "") + r.toFixed(3);
+  if (d.corrMorning >= 0.5) {
+    items.push(`Pointe matin (6–10 h) : trafic et NO₂ évoluent ensemble (<strong>r = ${fmtR(d.corrMorning)}</strong>) — signature d’un couplage direct émissions-trafic.`);
+  } else if (d.corrMorning <= -0.3) {
+    items.push(`Matin atypique : corrélation négative (<strong>r = ${fmtR(d.corrMorning)}</strong>) — vérifier la couverture des capteurs ou un biais météo.`);
+  }
+  if (d.corrEvening <= -0.3 && d.corrMorning >= 0.4) {
+    items.push(`Soir (16–20 h) : trafic dense mais NO₂ en baisse (<strong>r = ${fmtR(d.corrEvening)}</strong>) — effet photochimique estival (consommation du NO₂ en ozone).`);
+  }
+  if (Math.abs(d.corrAll) < 0.25) {
+    items.push(`Sur 24 h, le lien global trafic–NO₂ est faible (<strong>r = ${fmtR(d.corrAll)}</strong>) : agréger toute la journée masque les fenêtres où le couplage est fort.`);
+  }
+  if (d.lag.lag !== 0) {
+    const dir = d.lag.lag > 0 ? "après" : "avant";
+    items.push(`Décalage optimal trafic → NO₂ : <strong>${d.lag.lag > 0 ? "+" : ""}${d.lag.lag} h</strong> (r = ${fmtR(d.lag.r)}) — le pic pollution suit le trafic ${Math.abs(d.lag.lag)} h ${dir}.`);
+  } else {
+    items.push(`Sans décalage notable, trafic et NO₂ sont quasi synchrones (r max = ${fmtR(d.lag.r)}).`);
+  }
+  if (d.nCore && d.nBan) {
+    const gapAm = (d.no2Core[8] - d.no2Ban[8]).toFixed(1);
+    const gapPm = (d.no2Core[18] - d.no2Ban[18]).toFixed(1);
+    items.push(`À 8 h, écart NO₂ centre–banlieue : <strong>${gapAm} µg/m³</strong> ; à 18 h : <strong>${gapPm} µg/m³</strong>.`);
+  }
+  if (d.corrEmNo2 >= 0.4) {
+    items.push(`Proxy émissions et NO₂ co-varient (<strong>r = ${fmtR(d.corrEmNo2)}</strong>) sur la journée simulée.`);
+  }
+  items.push(`Pics horaires : trafic <strong>${d.peakTraffic}h</strong>, NO₂ <strong>${d.peakNo2}h</strong>, émissions <strong>${d.peakEm}h</strong>.`);
+  return items;
+}
+
+function formatCorr(r) {
+  if (r == null || Number.isNaN(r)) return "—";
+  return (r >= 0 ? "+" : "") + r.toFixed(3);
+}
+
+function renderAnalyticsPanel() {
+  const body = document.getElementById("analytics-body");
+  const meta = document.getElementById("analytics-meta");
+  if (!body || !state.manifest) return;
+  const d = buildAnalyticsData();
+  const insights = buildAnalyticsInsights(d);
+  meta.textContent = `${CITY.label} · ${d.day} · ${d.nEmissions} points émissions · ${d.nAir} stations air · calculs client`;
+  body.innerHTML = `
+    <div class="analytics-kpi-grid">
+      <div class="analytics-kpi">
+        <div class="label">Trafic ↔ NO₂ (matin)</div>
+        <div class="value">${formatCorr(d.corrMorning)}</div>
+        <div class="hint">Pearson 6–10 h</div>
+      </div>
+      <div class="analytics-kpi">
+        <div class="label">Trafic ↔ NO₂ (24 h)</div>
+        <div class="value">${formatCorr(d.corrAll)}</div>
+        <div class="hint">Journée entière</div>
+      </div>
+      <div class="analytics-kpi">
+        <div class="label">Trafic ↔ NO₂ (soir)</div>
+        <div class="value">${formatCorr(d.corrEvening)}</div>
+        <div class="hint">Pearson 16–20 h</div>
+      </div>
+      <div class="analytics-kpi">
+        <div class="label">Émissions ↔ NO₂</div>
+        <div class="value">${formatCorr(d.corrEmNo2)}</div>
+        <div class="hint">Proxy CO₂ vs air</div>
+      </div>
+      <div class="analytics-kpi">
+        <div class="label">Décalage optimal</div>
+        <div class="value">${d.lag.lag > 0 ? "+" : ""}${d.lag.lag} h</div>
+        <div class="hint">Cross-corr. trafic→NO₂</div>
+      </div>
+      <div class="analytics-kpi">
+        <div class="label">Trafic ↔ PM2.5</div>
+        <div class="value">${formatCorr(d.corrTrafficPm)}</div>
+        <div class="hint">24 h</div>
+      </div>
+    </div>
+
+    <div class="analytics-section">
+      <h3>Profils horaires normalisés</h3>
+      <p>Superposition des courbes (0–100 % du pic) pour comparer les rythmes sans mélanger les unités.</p>
+      ${svgMultiLine([
+        { name: "Trafic", values: d.traffic, color: "var(--seine)" },
+        { name: "NO₂", values: d.no2, color: "var(--alert)" },
+        { name: "Émissions", values: d.emissions, color: "var(--copper)" },
+        { name: "PM2.5", values: d.pm25, color: "rgba(244,241,236,0.55)" },
+      ])}
+      <div class="analytics-legend">
+        <span><i style="background:var(--seine)"></i>Trafic</span>
+        <span><i style="background:var(--alert)"></i>NO₂</span>
+        <span><i style="background:var(--copper)"></i>Émissions</span>
+        <span><i style="background:rgba(244,241,236,0.55)"></i>PM2.5</span>
+      </div>
+    </div>
+
+    <div class="analytics-section">
+      <h3>Nuage trafic × NO₂ (par heure)</h3>
+      <p>Chaque point = une heure. Bleu = matin, rouge = soir, cuivre = reste de la journée.</p>
+      ${svgScatter(d.traffic, d.no2)}
+    </div>
+
+    <div class="analytics-section">
+      <h3>Centre vs banlieue (NO₂)</h3>
+      <p>Moyennes horaires : ${d.nCore} points centre · ${d.nBan} points périphérie.</p>
+      ${d.nCore && d.nBan ? svgGapChart(d.no2Core, d.no2Ban) : "<p>Données insuffisantes pour comparer les zones.</p>"}
+      <div class="analytics-legend">
+        <span><i style="background:var(--seine)"></i>${CITY.coreLabel || "Centre"}</span>
+        <span><i style="background:var(--alert)"></i>${CITY.peripheryLabel || "Banlieue"}</span>
+      </div>
+    </div>
+
+    <div class="analytics-section">
+      <h3>Lecture automatique</h3>
+      <ul class="analytics-insights">${insights.map((t) => `<li>${t}</li>`).join("")}</ul>
+    </div>
+  `;
+}
+
+function openAnalyticsPanel() {
+  state.analyticsOpen = true;
+  renderAnalyticsPanel();
+  document.getElementById("analytics-panel").classList.add("show");
+}
+
+function closeAnalyticsPanel() {
+  state.analyticsOpen = false;
+  document.getElementById("analytics-panel").classList.remove("show");
+}
+
 function fillLegend() {
   const m = state.manifest;
   const el = document.getElementById("legend-correlation");
@@ -2070,6 +2469,9 @@ function bindUI() {
   document.getElementById("legend-close").addEventListener("click", () => legendModal.classList.remove("show"));
   legendModal.querySelector(".modal-backdrop").addEventListener("click", () => legendModal.classList.remove("show"));
 
+  document.getElementById("analytics-btn").addEventListener("click", openAnalyticsPanel);
+  document.getElementById("analytics-close").addEventListener("click", closeAnalyticsPanel);
+
   const airPopup = document.getElementById("air-popup");
   document.getElementById("air-popup-close").addEventListener("click", hideAirPopup);
   airPopup.querySelector(".modal-backdrop").addEventListener("click", hideAirPopup);
@@ -2107,7 +2509,8 @@ function bindUI() {
       ensureFlowTrips(0, true);
       render(true);
     } else if (e.key === "Escape") {
-      if (state.airPopupOpen) hideAirPopup();
+      if (state.analyticsOpen) closeAnalyticsPanel();
+      else if (state.airPopupOpen) hideAirPopup();
       else if (legendModal.classList.contains("show")) legendModal.classList.remove("show");
       else if (modal.classList.contains("show")) modal.classList.remove("show");
     }
@@ -2147,6 +2550,7 @@ async function loadCityData() {
   fillLegend();
   updateCaption(state.currentTime);
   render(true);
+  if (state.analyticsOpen) renderAnalyticsPanel();
 }
 
 async function switchCity(cityId) {
