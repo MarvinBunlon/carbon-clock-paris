@@ -120,25 +120,25 @@ html, body {
   position: fixed; top: 110px; right: 24px; z-index: 10;
   background: linear-gradient(165deg, rgba(18,28,42,0.94), rgba(10,14,20,0.9));
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(77,184,232,0.32); border-radius: 18px;
-  padding: 1.05rem 1.15rem; min-width: 250px;
+  border: 1px solid rgba(77,184,232,0.32); border-radius: 14px;
+  padding: 0.7rem 0.8rem; width: 210px;
   font-family: var(--font-mono);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(232,93,76,0.1);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1px rgba(232,93,76,0.08);
 }
 #stats .stat-title {
-  font-family: var(--font-display); font-size: 0.78rem; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--seine); margin-bottom: 0.65rem;
+  font-family: var(--font-display); font-size: 0.68rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--seine); margin-bottom: 0.45rem;
 }
-#stats .stat-row { display: flex; align-items: center; gap: 0.45rem; margin: 0.55rem 0; }
-#stats .stat-label { color: var(--muted); flex: 1; font-size: 0.7rem; }
+#stats .stat-row { display: flex; align-items: center; gap: 0.35rem; margin: 0.38rem 0; }
+#stats .stat-label { color: var(--muted); flex: 1; font-size: 0.62rem; }
 #stats .stat-value {
-  color: var(--ink); font-weight: 600; min-width: 58px; text-align: right; font-size: 1.05rem;
+  color: var(--ink); font-weight: 600; min-width: 48px; text-align: right; font-size: 0.92rem;
 }
 #stats .stat-value.hot { color: var(--alert); text-shadow: 0 0 14px rgba(232,93,76,0.5); }
 #stats .stat-value.cool { color: var(--seine); text-shadow: 0 0 14px rgba(77,184,232,0.4); }
 #stats .stat-unit { color: var(--muted); font-size: 0.58rem; }
 #stats .bar {
-  width: 64px; height: 6px; background: rgba(244,241,236,0.08); border-radius: 4px; overflow: hidden;
+  width: 48px; height: 5px; background: rgba(244,241,236,0.08); border-radius: 4px; overflow: hidden;
 }
 #stats .bar-fill {
   display: block; height: 100%; width: 100%;
@@ -146,8 +146,8 @@ html, body {
   transform-origin: left; transform: scaleX(0); transition: transform 0.25s ease;
 }
 #stats .pulse-badge {
-  margin-top: 0.75rem; padding: 0.4rem 0.55rem; border-radius: 10px;
-  text-align: center; font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+  margin-top: 0.55rem; padding: 0.32rem 0.45rem; border-radius: 8px;
+  text-align: center; font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase;
   border: 1px solid var(--border); font-weight: 600;
 }
 #stats .pulse-badge.calm { color: var(--seine); background: rgba(77,184,232,0.12); }
@@ -198,9 +198,29 @@ html, body {
 #air-tooltip .row { color: var(--muted); margin: 0.18rem 0; }
 #air-tooltip .row strong { color: var(--seine); font-weight: 600; }
 
+#air-popup {
+  position: fixed; inset: 0; z-index: 50; display: none;
+  pointer-events: none;
+}
+#air-popup.show { display: block; pointer-events: auto; }
+#air-popup .modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.28);
+}
 #air-popup .air-popup-card {
-  width: min(400px, 100%);
-  max-height: 85vh;
+  position: fixed;
+  top: auto;
+  bottom: 92px;
+  right: 16px;
+  width: min(260px, calc(100vw - 32px));
+  max-height: min(340px, calc(100vh - 220px));
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: 14px;
+  overflow-y: auto;
+}
+#air-popup .modal-close {
+  top: 0.45rem; right: 0.55rem; font-size: 1.15rem;
 }
 #air-popup .aq-badge {
   display: inline-block; margin-top: 0.35rem; padding: 0.22rem 0.55rem;
@@ -215,29 +235,29 @@ html, body {
   text-transform: uppercase; color: var(--muted); border: 1px solid var(--border);
 }
 #air-popup .section {
-  margin-top: 0.85rem; padding-top: 0.75rem;
+  margin-top: 0.55rem; padding-top: 0.55rem;
   border-top: 1px solid rgba(244,241,236,0.08);
 }
 #air-popup .section-title {
-  font-family: var(--font-display); font-size: 0.68rem;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--seine);
-  margin-bottom: 0.45rem;
+  font-family: var(--font-display); font-size: 0.58rem;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--seine);
+  margin-bottom: 0.35rem;
 }
 #air-popup .metric-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem;
 }
 #air-popup .metric {
-  background: rgba(255,255,255,0.03); border-radius: 10px; padding: 0.55rem 0.65rem;
+  background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.4rem 0.5rem;
 }
-#air-popup .metric .label { color: var(--muted); font-size: 0.62rem; }
-#air-popup .metric .value { font-size: 1.05rem; font-weight: 600; margin-top: 0.15rem; }
-#air-popup .metric .delta { font-size: 0.62rem; margin-top: 0.2rem; }
+#air-popup .metric .label { color: var(--muted); font-size: 0.56rem; }
+#air-popup .metric .value { font-size: 0.88rem; font-weight: 600; margin-top: 0.1rem; }
+#air-popup .metric .delta { font-size: 0.56rem; margin-top: 0.15rem; }
 #air-popup .delta.up { color: var(--alert); }
 #air-popup .delta.down { color: var(--seine); }
 #air-popup .delta.neutral { color: var(--muted); }
 #air-popup .sparkline {
-  display: flex; align-items: flex-end; gap: 2px; height: 52px;
-  margin-top: 0.35rem; padding: 0.35rem 0.2rem 0;
+  display: flex; align-items: flex-end; gap: 2px; height: 36px;
+  margin-top: 0.25rem; padding: 0.25rem 0.15rem 0;
 }
 #air-popup .spark-bar {
   flex: 1; min-width: 0; border-radius: 2px 2px 0 0;
@@ -249,9 +269,9 @@ html, body {
   font-size: 0.58rem; color: var(--muted); margin-top: 0.25rem;
 }
 #air-popup .note {
-  margin-top: 0.75rem; font-size: 0.62rem; line-height: 1.45; color: rgba(244,241,236,0.42);
+  margin-top: 0.5rem; font-size: 0.56rem; line-height: 1.4; color: rgba(244,241,236,0.42);
 }
-#air-popup .row { color: var(--muted); margin: 0.22rem 0; font-size: 0.72rem; }
+#air-popup .row { color: var(--muted); margin: 0.16rem 0; font-size: 0.64rem; }
 #air-popup .row strong { color: var(--ink); font-weight: 600; }
 
 #legend-btn {
@@ -349,6 +369,29 @@ html, body {
 }
 .analytics-insights li { margin: 0.35rem 0; }
 .analytics-insights strong { color: var(--ink); font-weight: 600; }
+
+.scatter-chart { margin-top: 0.65rem; }
+.scatter-chart .scatter-point { cursor: pointer; }
+.scatter-detail {
+  margin-top: 0.55rem; padding: 0.55rem 0.75rem; border-radius: 10px;
+  background: rgba(77,184,232,0.08); border: 1px solid rgba(77,184,232,0.22);
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); min-height: 2.4rem;
+  display: flex; align-items: center;
+}
+.scatter-detail strong { color: var(--ink); }
+.scatter-detail .tag {
+  display: inline-block; margin-left: 0.5rem; padding: 0.12rem 0.45rem;
+  border-radius: 999px; font-size: 0.58rem; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.scatter-detail .tag.morning { background: rgba(77,184,232,0.18); color: var(--seine); }
+.scatter-detail .tag.evening { background: rgba(232,93,76,0.18); color: var(--alert); }
+.scatter-detail .tag.day { background: rgba(212,132,90,0.18); color: var(--copper); }
+.scatter-hint {
+  margin-top: 0.45rem; font-size: 0.68rem; color: rgba(244,241,236,0.45); line-height: 1.45;
+}
+.scatter-chart .axis-label { font-size: 10px; fill: rgba(244,241,236,0.45); font-family: monospace; }
+.scatter-chart .hour-label { font-size: 9px; fill: rgba(244,241,236,0.72); font-family: monospace; pointer-events: none; }
+.scatter-chart .quad-hint { font-size: 9px; fill: rgba(244,241,236,0.28); font-style: italic; }
 
 .legend-section {
   margin: 0.85rem 0; padding: 0.85rem 0.95rem;
@@ -562,7 +605,7 @@ html, body {
   <div class="modal-backdrop"></div>
   <div class="modal-card air-popup-card">
     <button class="modal-close" id="air-popup-close" aria-label="Fermer">×</button>
-    <h2 id="air-popup-title" style="margin:0 0 0.35rem;font-family:var(--font-display);font-size:1.15rem;"></h2>
+    <h2 id="air-popup-title" style="margin:0 0 0.25rem;font-family:var(--font-display);font-size:0.95rem;line-height:1.25;"></h2>
     <div id="air-popup-body"></div>
   </div>
 </div>
@@ -2149,24 +2192,145 @@ function svgMultiLine(seriesList, w = 680, h = 200, pad = 36) {
   </svg>`;
 }
 
-function svgScatter(traffic, no2, w = 680, h = 220, pad = 44) {
-  const innerW = w - pad * 2, innerH = h - pad * 2;
-  const maxX = Math.max(...traffic, 1e-6);
-  const maxY = Math.max(...no2, 1e-6);
-  const dots = traffic.map((x, h) => {
-    const px = pad + (x / maxX) * innerW;
-    const py = pad + innerH - (no2[h] / maxY) * innerH;
-    const rush = h >= 6 && h <= 10 ? "var(--seine)" : h >= 16 && h <= 20 ? "var(--alert)" : "var(--copper)";
-    return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5.5" fill="${rush}" opacity="0.82"/>
-      <title>${h}h · trafic ${x.toFixed(0)} · NO₂ ${no2[h].toFixed(1)} µg/m³</title>`;
+function niceAxisMax(val, steps = 4) {
+  if (val <= 0) return 1;
+  const rough = val / steps;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / mag;
+  const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+  return nice * mag * steps;
+}
+
+function axisTicks(max, steps = 4) {
+  const out = [];
+  for (let i = 0; i <= steps; i++) out.push((max * i) / steps);
+  return out;
+}
+
+function scatterPeriod(hour) {
+  if (hour >= 6 && hour <= 10) return "morning";
+  if (hour >= 16 && hour <= 20) return "evening";
+  return "day";
+}
+
+function scatterPeriodLabel(period) {
+  if (period === "morning") return "Pointe matin";
+  if (period === "evening") return "Pointe soir";
+  return "Journée";
+}
+
+function linearTrend(traffic, no2) {
+  const n = traffic.length;
+  let sx = 0, sy = 0, sxy = 0, sx2 = 0;
+  for (let i = 0; i < n; i++) {
+    sx += traffic[i]; sy += no2[i]; sxy += traffic[i] * no2[i]; sx2 += traffic[i] * traffic[i];
+  }
+  const den = n * sx2 - sx * sx;
+  if (!den) return { slope: 0, intercept: sy / n };
+  const slope = (n * sxy - sx * sy) / den;
+  return { slope, intercept: (sy - slope * sx) / n };
+}
+
+function svgScatter(traffic, no2, w = 680, height = 300, padL = 52, padR = 16, padT = 20, padB = 44) {
+  const innerW = w - padL - padR;
+  const innerH = height - padT - padB;
+  const maxX = niceAxisMax(Math.max(...traffic, 1));
+  const maxY = niceAxisMax(Math.max(...no2, 1));
+  const toX = (v) => padL + (v / maxX) * innerW;
+  const toY = (v) => padT + innerH - (v / maxY) * innerH;
+
+  const gridX = axisTicks(maxX, 4).map((v) => {
+    const x = toX(v);
+    return `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + innerH}" stroke="rgba(244,241,236,0.07)" stroke-dasharray="3 4"/>
+      <text x="${x}" y="${padT + innerH + 14}" text-anchor="middle" class="axis-label">${Math.round(v)}</text>`;
   }).join("");
-  return `<svg viewBox="0 0 ${w} ${h}" class="analytics-svg" role="img" aria-label="Nuage trafic versus NO₂">
-    <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="rgba(244,241,236,0.15)"/>
-    <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="rgba(244,241,236,0.15)"/>
-    <text x="${w / 2}" y="${h - 6}" text-anchor="middle" fill="rgba(244,241,236,0.4)" font-size="10">Trafic horaire moyen</text>
-    <text x="12" y="${h / 2}" transform="rotate(-90 12 ${h / 2})" text-anchor="middle" fill="rgba(244,241,236,0.4)" font-size="10">NO₂ µg/m³</text>
+
+  const gridY = axisTicks(maxY, 4).map((v) => {
+    const y = toY(v);
+    return `<line x1="${padL}" y1="${y}" x2="${padL + innerW}" y2="${y}" stroke="rgba(244,241,236,0.07)" stroke-dasharray="3 4"/>
+      <text x="${padL - 8}" y="${y + 3}" text-anchor="end" class="axis-label">${Math.round(v)}</text>`;
+  }).join("");
+
+  const trend = linearTrend(traffic, no2);
+  const x0 = 0, x1 = maxX;
+  const y0 = trend.intercept;
+  const y1 = trend.slope * maxX + trend.intercept;
+  const trendLine = `<line x1="${toX(x0)}" y1="${toY(Math.max(0, y0))}" x2="${toX(x1)}" y2="${toY(Math.min(maxY, y1))}"
+    stroke="rgba(244,241,236,0.35)" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+
+  const keyHours = new Set([0, 6, 8, 12, 18, 23]);
+  const dots = traffic.map((x, hour) => {
+    const px = toX(x);
+    const py = toY(no2[hour]);
+    const period = scatterPeriod(hour);
+    const rush = period === "morning" ? "var(--seine)" : period === "evening" ? "var(--alert)" : "var(--copper)";
+    const r = keyHours.has(hour) ? 7 : 5.5;
+    const label = keyHours.has(hour)
+      ? `<text x="${px}" y="${py - 10}" text-anchor="middle" class="hour-label">${hour}h</text>`
+      : "";
+    const labelAttr = `${hour}h · trafic ${Math.round(x)} véh/h · NO₂ ${no2[hour].toFixed(1)} µg/m³ · ${scatterPeriodLabel(period)}`;
+    return `<g class="scatter-point" data-hour="${hour}">
+      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${r + 3}" fill="transparent"/>
+      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${r}" fill="${rush}" opacity="0.9" stroke="rgba(10,14,20,0.85)" stroke-width="1.2"/>
+      ${label}
+      <title>${labelAttr}</title>
+    </g>`;
+  }).join("");
+
+  return `<svg viewBox="0 0 ${w} ${height}" class="analytics-svg scatter-svg" role="img" aria-label="Nuage trafic versus NO₂ par heure">
+    ${gridX}${gridY}
+    <line x1="${padL}" y1="${padT + innerH}" x2="${padL + innerW}" y2="${padT + innerH}" stroke="rgba(244,241,236,0.22)"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + innerH}" stroke="rgba(244,241,236,0.22)"/>
+    ${trendLine}
+    <text x="${padL + innerW / 2}" y="${height - 4}" text-anchor="middle" class="axis-label">Trafic horaire moyen (véhicules / h)</text>
+    <text x="14" y="${padT + innerH / 2}" transform="rotate(-90 14 ${padT + innerH / 2})" text-anchor="middle" class="axis-label">NO₂ (µg/m³)</text>
+    <text x="${toX(maxX * 0.72)}" y="${toY(maxY * 0.88)}" class="quad-hint">haut = air pollué</text>
+    <text x="${toX(maxX * 0.72)}" y="${toY(maxY * 0.12)}" class="quad-hint">bas = air plus sain</text>
+    <text x="${toX(maxX * 0.05)}" y="${padT + innerH + 28}" class="quad-hint">← moins de trafic</text>
+    <text x="${toX(maxX * 0.78)}" y="${padT + innerH + 28}" class="quad-hint">plus de trafic →</text>
     ${dots}
   </svg>`;
+}
+
+function scatterChartHtml(traffic, no2) {
+  const defaultHour = 8;
+  const t = traffic[defaultHour] ?? 0;
+  const n = no2[defaultHour] ?? 0;
+  const period = scatterPeriod(defaultHour);
+  return `<div class="scatter-chart">
+    ${svgScatter(traffic, no2)}
+    <div class="scatter-detail" id="scatter-detail">
+      <span>Survole un point · exemple <strong>${defaultHour}h</strong> : trafic <strong>${Math.round(t)}</strong> véh/h, NO₂ <strong>${n.toFixed(1)}</strong> µg/m³</span>
+      <span class="tag ${period}">${scatterPeriodLabel(period)}</span>
+    </div>
+    <p class="scatter-hint">Chaque point = une heure de la journée. La ligne pointillée indique la tendance globale. En été, les points du soir (rouge) peuvent être en bas malgré un trafic élevé — effet photochimique.</p>
+    <div class="analytics-legend">
+      <span><i style="background:var(--seine)"></i>6h–10h (matin)</span>
+      <span><i style="background:var(--alert)"></i>16h–20h (soir)</span>
+      <span><i style="background:var(--copper)"></i>Reste de la journée</span>
+    </div>
+  </div>`;
+}
+
+function bindScatterHover(traffic, no2) {
+  const detail = document.getElementById("scatter-detail");
+  const points = document.querySelectorAll(".scatter-point");
+  if (!detail || !points.length || !traffic?.length) return;
+
+  const showHour = (hour) => {
+    const period = scatterPeriod(hour);
+    detail.innerHTML = `<span><strong>${hour}h</strong> — trafic <strong>${Math.round(traffic[hour])}</strong> véh/h · NO₂ <strong>${no2[hour].toFixed(1)}</strong> µg/m³</span>
+      <span class="tag ${period}">${scatterPeriodLabel(period)}</span>`;
+  };
+
+  const setDefault = () => {
+    detail.innerHTML = `<span>Survole un point pour voir le détail horaire (trafic + NO₂).</span>`;
+  };
+
+  points.forEach((g) => {
+    g.addEventListener("mouseenter", () => showHour(Number(g.dataset.hour)));
+    g.addEventListener("mouseleave", setDefault);
+  });
 }
 
 function svgGapChart(core, ban, w = 680, h = 180, pad = 36) {
@@ -2316,9 +2480,9 @@ function renderAnalyticsPanel() {
     </div>
 
     <div class="analytics-section">
-      <h3>Nuage trafic × NO₂ (par heure)</h3>
-      <p>Chaque point = une heure. Bleu = matin, rouge = soir, cuivre = reste de la journée.</p>
-      ${svgScatter(d.traffic, d.no2)}
+      <h3>Trafic × NO₂ — une heure = un point</h3>
+      <p>Axe horizontal = volume de trafic. Axe vertical = pollution NO₂. Compare matin (bleu) et soir (rouge).</p>
+      ${scatterChartHtml(d.traffic, d.no2)}
     </div>
 
     <div class="analytics-section">
@@ -2336,6 +2500,7 @@ function renderAnalyticsPanel() {
       <ul class="analytics-insights">${insights.map((t) => `<li>${t}</li>`).join("")}</ul>
     </div>
   `;
+  bindScatterHover(d.traffic, d.no2);
 }
 
 function openAnalyticsPanel() {
